@@ -33,7 +33,7 @@ jobs:
           path: vendor
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-
+            ${{ runner.os }}-php-${{ matrix.php-version }}
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
