@@ -77,20 +77,20 @@ class OptionTest extends TestCase
         $noneProperty->setAccessible(true);
 
         // Unset none for the test
-        $noneProperty->setValue(null);
+        $noneProperty->setValue(null, null);
 
         // Check after constructing Some option
         $someOption = Option::Some('some value');
         $this->assertInstanceOf(Option::class, $noneProperty->getValue($someOption));
 
         // Unset none for the next test
-        $noneProperty->setValue(null);
+        $noneProperty->setValue(null, null);
 
         // Check after calling None method
         $noneOption = Option::None();
         $this->assertInstanceOf(Option::class, $noneProperty->getValue($noneOption));
 
         // Unset none for the next tests
-        $noneProperty->setValue(null);
+        $noneProperty->setValue(null, null);
     }
 }
