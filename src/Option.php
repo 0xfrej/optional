@@ -3,6 +3,10 @@
 namespace Frej\Optional;
 
 use Frej\Optional\Exception\OptionNoneUnwrappedException;
+use Option as OptionOption;
+use PharIo\Manifest\Url;
+
+use function PHPUnit\Framework\returnSelf;
 
 /**
  * Class Option
@@ -26,7 +30,9 @@ class Option
      */
     protected readonly mixed $val;
 
-    protected function __construct() {}
+    protected function __construct()
+    {
+    }
 
     /**
      * Construct an option of Some(T)
@@ -112,6 +118,93 @@ class Option
     public function unwrap(): mixed
     {
         return $this->expect(null);
+    }
+
+    /**
+     * Retrieve the wrapped value or the value passed as fallback
+     *
+     * @param T|callable(): T $fallback fallback Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
+     * @return T
+     */
+    public function unwrapOr(mixed $default): mixed
+    {
+        if ($this->isSome()) {
+            return $this->val;
+        }
+
+        if (is_callable($fallback)) {
+            return $fallback();
+        }
+        return $fallback;
+    }
+
+    /**
+     * Filter Some(T) using a predicate
+     *
+     * Calls the provided predicate function on the contained value t if the Option is Some(t), and returns Some(t) if the function returns true; otherwise, returns None
+     *
+     * @param callable(T): bool $predicate predicate Provided predicate lambda. If returns true, returned value will be Some(T), otherwise None
+     * @return Option<T>
+     */
+    public function filter(callable $predicate): Option
+    {
+        if ($this->isSome() && $predicate() === true) {
+            return $this;
+        }
+
+        return self::None();
+    }
+
+    /**
+     * Tranform Option<T> to Option<U> using provided the function
+     *
+     * Leaves None unchanged
+     *
+     * @template U
+     * @param callable(T): U $transformer
+     * @return Option<U>
+     */
+    public function map(callable $transformer): Option
+    {
+        if ($this->isSome()) {
+            return self::Some($transformer($this->val));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Tranforms Option<T> to Option<U> using the provided function, uses `$default` value on None
+     *
+     * @template U
+     * @param callable(T): U $transformer
+     * @param U $default fallback value
+     * @return Option<U>
+     */
+    public function mapOr(callable $transformer, mixed $default): Option
+    {
+        if ($this->isSome()) {
+            return self::Some($transformer($this->val));
+        }
+
+        return self::Some($default);
+    }
+
+    /**
+     * Tranforms Option<T> to Option<U> using the provided function or calls `$default` for afallback value on None
+     *
+     * @template U
+     * @param callable(T): U $transformer
+     * @param callable(): U $default
+     * @return Option<U>
+     */
+    public function mapOrElse(callable $transformer, callable $default): Option
+    {
+        if ($this->isSome()) {
+            return self::Some($transformer($this->val));
+        }
+
+        return self::Some($default());
     }
 
     /**
