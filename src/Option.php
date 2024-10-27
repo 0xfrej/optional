@@ -3,10 +3,6 @@
 namespace Frej\Optional;
 
 use Frej\Optional\Exception\OptionNoneUnwrappedException;
-use Option as OptionOption;
-use PharIo\Manifest\Url;
-
-use function PHPUnit\Framework\returnSelf;
 
 /**
  * Class Option
@@ -121,9 +117,9 @@ class Option
     }
 
     /**
-     * Retrieve the wrapped value or the value passed as fallback
+     * Retrieve the wrapped value or the value passed as default
      *
-     * @param T|callable(): T $fallback fallback Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
+     * @param T|callable(): T $default Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
      * @return T
      */
     public function unwrapOr(mixed $default): mixed
@@ -132,10 +128,10 @@ class Option
             return $this->val;
         }
 
-        if (is_callable($fallback)) {
-            return $fallback();
+        if (is_callable($default)) {
+            return $default();
         }
-        return $fallback;
+        return $default;
     }
 
     /**
