@@ -104,6 +104,16 @@ class Option
     }
 
     /**
+     * Retrieve the value and pass it into the callback. Callback is not called if option is None
+     *
+     * @param callable(T): void $callback
+     */
+    public function expectInto(callable $callback, ?string $msg): void
+    {
+        $callback($this->expect($msg));
+    }
+
+    /**
      * Retrieve the wrapped value or throw an exception if the option is None
      *
      * For an alternative with option for specifying the exception message {@see Option::expect()}
@@ -132,6 +142,70 @@ class Option
             return $default();
         }
         return $default;
+    }
+
+    /**
+     * Retrieve the wrapped value or null
+     *
+     * @return T|null
+     */
+    public function unwrapOrNull(): mixed
+    {
+        if ($this->isSome()) {
+            return $this->val;
+        }
+        return null;
+    }
+
+    /**
+     * Retrieve the value and pass it into the callback. Callback is not called if option is None
+     *
+     * @param callable(T): void $callback
+     */
+    public function unwrapInto(callable $callback): void
+    {
+        $callback($this->unwrap());
+    }
+
+    /**
+     * Remove one level of Option
+     *
+     * @return Option<T>
+     */
+    public function flatten(): mixed
+    {
+        if ($this->val instanceof Option) {
+            return $this->val;
+        }
+        return $this;
+    }
+
+    /**
+     * Remove multiple levels of Option recursively
+     *
+     * @return Option<T>
+     */
+    public function flattenRecursive(): mixed
+    {
+        if (false === $this->val instanceof Option) {
+            return $this;
+        }
+        $current = $this->val;
+        while ($current->val instanceof Option) {
+            $current = $current->val;
+        }
+        return $current;
+    }
+
+    /**
+     * Retrieve the value and pass it into the callback.
+     *
+     * @param callable(T): void $callback
+     * @param T|callable():T $default Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
+     */
+    public function unwrapIntoOr(callable $callback, mixed $default): void
+    {
+        $callback($this->unwrapOr($default));
     }
 
     /**
