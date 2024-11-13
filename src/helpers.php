@@ -2,6 +2,8 @@
 
 namespace Frej\Optional;
 
+use Option;
+
 /**
  * Unwraps inner value into $dst if $self is Some.
  *
@@ -21,7 +23,7 @@ namespace Frej\Optional;
  */
 function letSome(mixed &$dst, Option $option): bool
 {
-    return $option::letSome($dst, $option);
+    return Option::letSome($dst, $option);
 }
 
 /**
@@ -32,8 +34,8 @@ function letSome(mixed &$dst, Option $option): bool
  * against this instance without calling functions like
  * {@see Option::isSome()} and {@see Option::isNone()}
  *
- * @template V
- * @return Option<V>
+ * @template T
+ * @return Option<T>
  */
 function None(): Option
 {
@@ -43,9 +45,9 @@ function None(): Option
 /**
  * Construct an option of Some(T)
  *
- * @template V
- * @param V $val
- * @return Option<V>
+ * @template T
+ * @param T $val
+ * @return Option<T>
  */
 function Some(mixed $val): Option
 {

@@ -17,19 +17,8 @@ use Frej\Optional\Exception\OptionNoneUnwrappedException;
  *
  * @template T
  */
-class Option
+abstract class Option
 {
-    protected static ?self $none = null;
-
-    /**
-     * @var T $val
-     */
-    protected readonly mixed $val;
-
-    protected function __construct()
-    {
-    }
-
     /**
      * Construct an option of Some(T)
      *
@@ -39,12 +28,7 @@ class Option
      */
     public static function Some(mixed $val): self
     {
-        if (!isset(self::$none)) {
-            self::$none = new static();
-        }
-        $o = new self();
-        $o->val = $val;
-        return $o;
+        return Some::make($val);
     }
 
     /**
@@ -60,10 +44,7 @@ class Option
      */
     public static function None(): self
     {
-        if (!isset(self::$none)) {
-            self::$none = new static(null);
-        }
-        return self::$none;
+        return None::make();
     }
 
     /**
@@ -71,47 +52,24 @@ class Option
      *
      * @return bool
      */
-    public function isSome(): bool
-    {
-        return $this !== self::$none;
-    }
+    abstract public function isSome(): bool;
 
     /**
      * Check if option is None
      *
      * @return bool
      */
-    public function isNone(): bool
-    {
-        return $this === self::$none;
-    }
+    abstract public function isNone(): bool;
 
     /**
-     * Retrieve the wrapped value or throw an exception if the option is None
+     * Check if the wrapped value is empty
      *
-     * For an alternative with no message to be set {@see Option::unwrap()}
+     * Returns true if option is None.
+     * Shorthand for `empty($option->unwrapOrNull()
      *
-     * @param string|null $msg The message to be thrown when the option is none
-     * @return T The value of the option if it is not none
-     * @throws OptionNoneUnwrappedException if the option is none
+     * @return bool
      */
-    public function expect(?string $msg): mixed
-    {
-        if ($this->isSome()) {
-            return $this->val;
-        }
-        throw new OptionNoneUnwrappedException($msg ?? "Option is none");
-    }
-
-    /**
-     * Retrieve the value and pass it into the callback. Callback is not called if option is None
-     *
-     * @param callable(T): void $callback
-     */
-    public function expectInto(callable $callback, ?string $msg): void
-    {
-        $callback($this->expect($msg));
-    }
+    abstract public function isEmpty(): bool;
 
     /**
      * Retrieve the wrapped value or throw an exception if the option is None
@@ -121,10 +79,7 @@ class Option
      * @return T The value of the option if it is not none
      * @throws OptionNoneUnwrappedException if the option is none
      */
-    public function unwrap(): mixed
-    {
-        return $this->expect(null);
-    }
+    abstract public function unwrap(null|string|\Throwable $error = null): mixed;
 
     /**
      * Retrieve the wrapped value or the value passed as default
@@ -132,70 +87,21 @@ class Option
      * @param T|callable(): T $default Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
      * @return T
      */
-    public function unwrapOr(mixed $default): mixed
-    {
-        if ($this->isSome()) {
-            return $this->val;
-        }
-
-        if (is_callable($default)) {
-            return $default();
-        }
-        return $default;
-    }
+    abstract public function unwrapOr(mixed $default): mixed;
 
     /**
      * Retrieve the wrapped value or null
      *
      * @return T|null
      */
-    public function unwrapOrNull(): mixed
-    {
-        if ($this->isSome()) {
-            return $this->val;
-        }
-        return null;
-    }
+    abstract public function unwrapOrNull(): mixed;
 
     /**
      * Retrieve the value and pass it into the callback. Callback is not called if option is None
      *
      * @param callable(T): void $callback
      */
-    public function unwrapInto(callable $callback): void
-    {
-        $callback($this->unwrap());
-    }
-
-    /**
-     * Remove one level of Option
-     *
-     * @return Option<T>
-     */
-    public function flatten(): mixed
-    {
-        if ($this->val instanceof Option) {
-            return $this->val;
-        }
-        return $this;
-    }
-
-    /**
-     * Remove multiple levels of Option recursively
-     *
-     * @return Option<T>
-     */
-    public function flattenRecursive(): mixed
-    {
-        if (false === $this->val instanceof Option) {
-            return $this;
-        }
-        $current = $this->val;
-        while ($current->val instanceof Option) {
-            $current = $current->val;
-        }
-        return $current;
-    }
+    abstract public function unwrapInto(callable $callback, null|string|\Throwable $error = null): void;
 
     /**
      * Retrieve the value and pass it into the callback.
@@ -203,27 +109,17 @@ class Option
      * @param callable(T): void $callback
      * @param T|callable():T $default Value to be used as fallback when option is not Some. When callable is provided, it will be called to resolve the fallback value instead.
      */
-    public function unwrapIntoOr(callable $callback, mixed $default): void
-    {
-        $callback($this->unwrapOr($default));
-    }
+    abstract public function unwrapIntoOr(callable $callback, mixed $default): void;
 
     /**
      * Filter Some(T) using a predicate
      *
      * Calls the provided predicate function on the contained value t if the Option is Some(t), and returns Some(t) if the function returns true; otherwise, returns None
      *
-     * @param callable(T): bool $predicate predicate Provided predicate lambda. If returns true, returned value will be Some(T), otherwise None
+     * @param T|callable(T): bool $predicate predicate Provided predicate lambda. If returns true, returned value will be Some(T), otherwise None
      * @return Option<T>
      */
-    public function filter(callable $predicate): Option
-    {
-        if ($this->isSome() && $predicate() === true) {
-            return $this;
-        }
-
-        return self::None();
-    }
+    abstract public function filter(mixed $predicate): Option;
 
     /**
      * Tranform Option<T> to Option<U> using provided the function
@@ -234,48 +130,17 @@ class Option
      * @param callable(T): U $transformer
      * @return Option<U>
      */
-    public function map(callable $transformer): Option
-    {
-        if ($this->isSome()) {
-            return self::Some($transformer($this->val));
-        }
-
-        return $this;
-    }
+    abstract public function map(callable $transformer): Option;
 
     /**
      * Tranforms Option<T> to Option<U> using the provided function, uses `$default` value on None
      *
      * @template U
      * @param callable(T): U $transformer
-     * @param U $default fallback value
+     * @param U|callable(): U $default fallback value
      * @return Option<U>
      */
-    public function mapOr(callable $transformer, mixed $default): Option
-    {
-        if ($this->isSome()) {
-            return self::Some($transformer($this->val));
-        }
-
-        return self::Some($default);
-    }
-
-    /**
-     * Tranforms Option<T> to Option<U> using the provided function or calls `$default` for afallback value on None
-     *
-     * @template U
-     * @param callable(T): U $transformer
-     * @param callable(): U $default
-     * @return Option<U>
-     */
-    public function mapOrElse(callable $transformer, callable $default): Option
-    {
-        if ($this->isSome()) {
-            return self::Some($transformer($this->val));
-        }
-
-        return self::Some($default());
-    }
+    abstract public function mapOr(callable $transformer, mixed $default): Option;
 
     /**
      * Unwraps inner value into $dst if $self is Some.
