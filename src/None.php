@@ -3,10 +3,12 @@
 namespace Frej\Optional;
 
 use Frej\Optional\Exception\OptionNoneUnwrappedException;
+use Throwable;
 
 /**
  * @template T
  * @extends Option<T>
+ * @internal
  */
 class None extends Option
 {
@@ -93,7 +95,7 @@ class None extends Option
      */
     public function unwrapIntoOr(callable $callback, mixed $default): void
     {
-        $this->unwrapOr($default);
+        $callback($this->unwrapOr($default));
     }
 
     /**
@@ -101,7 +103,15 @@ class None extends Option
      */
     public function filter(mixed $predicate): Option
     {
-        return None::make();
+        return $this;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function filterInto(callable $callback, mixed $predicate): void
+    {
+        $callback($this);
     }
 
     /**
@@ -109,7 +119,7 @@ class None extends Option
      */
     public function map(callable $transformer): Option
     {
-        return None::make();
+        return $this;
     }
 
     /**
@@ -121,5 +131,15 @@ class None extends Option
             return Some::make($default());
         }
         return Some::make($default);
+    }
+
+    public function mapInto(callable $callback, callable $transformer): void
+    {
+        $callback($this->map($transformer));
+    }
+
+    public function mapIntoOr(callable $callback, callable $transformer, mixed $default): void
+    {
+        $callback($this->mapOr($transformer, $default));
     }
 }

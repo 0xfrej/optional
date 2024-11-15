@@ -114,12 +114,23 @@ abstract class Option
     /**
      * Filter Some(T) using a predicate
      *
-     * Calls the provided predicate function on the contained value t if the Option is Some(t), and returns Some(t) if the function returns true; otherwise, returns None
+     * Calls the provided predicate function on the contained value to check if the Option is Some(T), and returns Some(T) if the function returns true; otherwise, returns None
      *
-     * @param T|callable(T): bool $predicate predicate Provided predicate lambda. If returns true, returned value will be Some(T), otherwise None
+     * @param T|callable(T): bool $predicate Provided predicate lambda. If returns true, returned value will be Some(T), otherwise None
      * @return Option<T>
      */
     abstract public function filter(mixed $predicate): Option;
+
+    /**
+     * Filter Some(T) using a predicate
+     *
+     * Calls the provided predicate function on the contained value to check if the Option is Some(T), and retuns Some(T) if the function returns treu; otherwise returns None
+     *
+     * @param callable(Option<T>): void $callback
+     * @param T|callable(T): bool $predicate Provided predcate lambda. If returns true, returned value will be Some(T),
+     * otherwise None
+     */
+    abstract public function filterInto(callable $callback, mixed $predicate): void;
 
     /**
      * Tranform Option<T> to Option<U> using provided the function
@@ -133,6 +144,17 @@ abstract class Option
     abstract public function map(callable $transformer): Option;
 
     /**
+     * Tranform Option<T> to Option<U> using provided the function
+     *
+     * Leaves None unchanged
+     *
+     * @template U
+     * @param callable(Option<U>): void $callback
+     * @param callable(T): U $transformer
+     */
+    abstract public function mapInto(callable $callback, callable $transformer): void;
+
+    /**
      * Tranforms Option<T> to Option<U> using the provided function, uses `$default` value on None
      *
      * @template U
@@ -141,6 +163,17 @@ abstract class Option
      * @return Option<U>
      */
     abstract public function mapOr(callable $transformer, mixed $default): Option;
+
+    /**
+     * Tranforms Option<T> to Option<U> using the provided function, uses `$default` value on None
+     * and inputs the value into the provided callback
+     *
+     * @template U
+     * @param callable(Option<U>): void $callback
+     * @param callable(T): U $transformer
+     * @param U|callable(): U $default fallback value
+     */
+    abstract public function mapIntoOr(callable $callback, callable $transformer, mixed $default): void;
 
     /**
      * Unwraps inner value into $dst if $self is Some.

@@ -5,6 +5,7 @@ namespace Frej\Optional;
 /**
  * @template T
  * @extends Option<T>
+ * @internal
  */
 class Some extends Option
 {
@@ -104,6 +105,15 @@ class Some extends Option
     /**
      * @inheritdoc
      */
+    public function filterInto(callable $callback, mixed $predicate): void
+    {
+        $callback($this->filter($predicate));
+    }
+
+
+    /**
+     * @inheritdoc
+     */
     public function map(callable $transformer): Option
     {
         return self::make($transformer($this->val));
@@ -115,5 +125,21 @@ class Some extends Option
     public function mapOr(callable $transformer, mixed $default): Option
     {
         return self::make($transformer($this->val));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function mapInto(callable $callback, callable $transformer): void
+    {
+        $callback($this->map($transformer));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function mapIntoOr(callable $callback, callable $transformer, mixed $default): void
+    {
+        $callback($this->mapOr($transformer, $default));
     }
 }
